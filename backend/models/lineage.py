@@ -11,3 +11,7 @@ class LineageResult(BaseModel):
     source_tables: List[str]
     target_table: str
     column_mappings: List[ColumnMapping]
+
+class BulkLineageRequest(BaseModel):
+    alias: str
+    schema: Optional[str] = None

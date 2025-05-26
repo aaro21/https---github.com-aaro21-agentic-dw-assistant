@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/router';
+import Layout from '../components/Layout';
 
 export default function LineageTest() {
   const [connections, setConnections] = useState([]);
@@ -51,7 +52,7 @@ export default function LineageTest() {
     try {
       const res = await axios.post(`${API_BASE}/lineage`, {
         procedure_name: selectedProc,
-        database: selectedConnection || "",  // ✅ Include the selected connection
+        database: selectedConnection || "",
         content: procBody,
       });
       setResult(res.data);
@@ -68,7 +69,7 @@ export default function LineageTest() {
     try {
       const res = await axios.post(`${API_BASE}/lineage/save`, {
         procedure_name: selectedProc,
-        database: selectedConnection || "",  // make sure it's not null
+        database: selectedConnection || "",
         content: procBody,
         lineage: result,
       });
@@ -79,106 +80,108 @@ export default function LineageTest() {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-4 text-gray-800">📊 Explore Lineage</h1>
+    <Layout>
+      <div className="p-6 max-w-4xl mx-auto">
+        <h1 className="text-2xl font-semibold mb-4 text-gray-800">📊 Explore Lineage</h1>
 
-      <div className="mb-4">
-        <label className="block text-gray-600 font-medium mb-1">Connection</label>
-        <div className="flex flex-wrap gap-2">
-          {connections.map((conn) => (
-            <button
-              key={conn}
-              className={`px-3 py-1 rounded text-sm border ${
-                selectedConnection === conn
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 border-gray-300'
-              }`}
-              onClick={() => setSelectedConnection(conn)}
-            >
-              {conn}
-            </button>
-          ))}
+        <div className="mb-4">
+          <label className="block text-gray-600 font-medium mb-1">Connection</label>
+          <div className="flex flex-wrap gap-2">
+            {connections.map((conn) => (
+              <button
+                key={conn}
+                className={`px-3 py-1 rounded text-sm border ${
+                  selectedConnection === conn
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-700 border-gray-300'
+                }`}
+                onClick={() => setSelectedConnection(conn)}
+              >
+                {conn}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div className="mb-4">
-        <label className="block text-gray-600 font-medium mb-1">Procedure</label>
-        <select
-          className="w-full border border-gray-300 rounded p-2"
-          value={selectedProc || ""}
-          onChange={(e) => setSelectedProc(e.target.value)}
-        >
-          <option value="">-- Select Stored Procedure --</option>
-          {procedures.map((proc) => (
-            <option key={proc} value={proc}>
-              {proc}
-            </option>
-          ))}
-        </select>
-      </div>
+        <div className="mb-4">
+          <label className="block text-gray-600 font-medium mb-1">Procedure</label>
+          <select
+            className="w-full border border-gray-300 rounded p-2"
+            value={selectedProc || ""}
+            onChange={(e) => setSelectedProc(e.target.value)}
+          >
+            <option value="">-- Select Stored Procedure --</option>
+            {procedures.map((proc) => (
+              <option key={proc} value={proc}>
+                {proc}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      <div className="flex gap-4 mb-4">
-        <button
-          onClick={handleSubmit}
-          disabled={loading || !selectedProc}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          {loading ? "Analyzing..." : "Analyze Lineage"}
-        </button>
+        <div className="flex gap-4 mb-4">
+          <button
+            onClick={handleSubmit}
+            disabled={loading || !selectedProc}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            {loading ? "Analyzing..." : "Analyze Lineage"}
+          </button>
+
+          {result && (
+            <button
+              onClick={handleSave}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            >
+              💾 Save Lineage
+            </button>
+          )}
+        </div>
+
+        {saveStatus && <p className="text-sm text-gray-700 mb-4">{saveStatus}</p>}
+
+        {error && (
+          <div className="mt-4 text-red-600 text-sm">
+            ❌ Error:
+            <pre className="mt-1 whitespace-pre-wrap break-all">
+              {typeof error === "string" ? error : JSON.stringify(error, null, 2)}
+            </pre>
+          </div>
+        )}
 
         {result && (
-          <button
-            onClick={handleSave}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-          >
-            💾 Save Lineage
-          </button>
+          <div className="mt-6 bg-white border rounded p-4 shadow">
+            <h2 className="font-bold text-gray-700 mb-2">🔍 Lineage Result</h2>
+            <pre className="whitespace-pre-wrap text-sm text-gray-800">
+              {JSON.stringify(
+                Object.fromEntries(
+                  Object.entries(result).filter(([k]) => !["_raw", "_prompt"].includes(k))
+                ),
+                null,
+                2
+              )}
+            </pre>
+
+            {result._raw && (
+              <details className="mt-4">
+                <summary className="font-semibold text-gray-600">📄 Raw LLM Response</summary>
+                <pre className="mt-2 p-2 bg-gray-100 text-xs overflow-x-auto">
+                  {result._raw}
+                </pre>
+              </details>
+            )}
+
+            {result._prompt && (
+              <details className="mt-4">
+                <summary className="font-semibold text-gray-600">🧠 Prompt Sent to LLM</summary>
+                <pre className="mt-2 p-2 bg-gray-100 text-xs overflow-x-auto">
+                  {result._prompt}
+                </pre>
+              </details>
+            )}
+          </div>
         )}
       </div>
-
-      {saveStatus && <p className="text-sm text-gray-700 mb-4">{saveStatus}</p>}
-
-      {error && (
-        <div className="mt-4 text-red-600 text-sm">
-          ❌ Error:
-          <pre className="mt-1 whitespace-pre-wrap break-all">
-            {typeof error === "string" ? error : JSON.stringify(error, null, 2)}
-          </pre>
-        </div>
-      )}
-
-      {result && (
-        <div className="mt-6 bg-white border rounded p-4 shadow">
-          <h2 className="font-bold text-gray-700 mb-2">🔍 Lineage Result</h2>
-          <pre className="whitespace-pre-wrap text-sm text-gray-800">
-            {JSON.stringify(
-              Object.fromEntries(
-                Object.entries(result).filter(([k]) => !["_raw", "_prompt"].includes(k))
-              ),
-              null,
-              2
-            )}
-          </pre>
-
-          {result._raw && (
-            <details className="mt-4">
-              <summary className="font-semibold text-gray-600">📄 Raw LLM Response</summary>
-              <pre className="mt-2 p-2 bg-gray-100 text-xs overflow-x-auto">
-                {result._raw}
-              </pre>
-            </details>
-          )}
-
-          {result._prompt && (
-            <details className="mt-4">
-              <summary className="font-semibold text-gray-600">🧠 Prompt Sent to LLM</summary>
-              <pre className="mt-2 p-2 bg-gray-100 text-xs overflow-x-auto">
-                {result._prompt}
-              </pre>
-            </details>
-          )}
-        </div>
-      )}
-    </div>
+    </Layout>
   );
 }

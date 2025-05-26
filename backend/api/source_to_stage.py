@@ -1,14 +1,14 @@
-# backend/api/source_stage.py
+# backend/api/source_to_stage.py
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import text
 from models.source_stage import SourceToStageRecord
 from connections.manager import ConnectionManager
 from datetime import datetime
 
-router = APIRouter()
+router = APIRouter(prefix="/source-to-stage-map", tags=["source-to-stage"])
 conn_mgr = ConnectionManager()
 
-@router.post("/source-to-stage")
+@router.post("/")
 def add_source_to_stage_mapping(record: SourceToStageRecord):
     try:
         engine = conn_mgr.get_sqlalchemy_engine("lineage")
