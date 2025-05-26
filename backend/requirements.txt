@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+pyodbc
+pydantic
+python-dotenv
+langchain
+langchain-openai
+openai

@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.log
+*.sqlite3
+*.db
+
+# FastAPI / backend
+.env
+.env.*
+*.egg-info/
+dist/
+build/
+*.bak
+
+# Node.js / frontend
+node_modules/
+.next/
+out/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+package-lock.json
+
+# Docker
+*.pid
+docker-volumes/
+*.tar
+*.img
+
+# VS Code and other IDEs
+.vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+
+# Test coverage
+htmlcov/
+.coverage
+.cache/
+pytest_cache/
+
+# Compiled files
+*.so
+*.dll
+
+# Misc
+!.env.example

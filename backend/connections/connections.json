@@ -1,0 +1,35 @@
+{
+  "Bronze": {
+    "alias": "Bronze",
+    "type": "sqlserver",
+    "server": "host.docker.internal",
+    "database": "AdventureWorksLT2019",
+    "driver": "ODBC Driver 18 for SQL Server",
+    "use_trusted_connection": false,
+    "user_env": "BRONZE_USER",
+    "password_env": "BRONZE_PASSWORD",
+    "trust_server_cert": true
+  },
+  "Silver": {
+    "alias": "Silver",
+    "type": "sqlserver",
+    "server": "host.docker.internal",
+    "database": "wh_bronze",
+    "driver": "ODBC Driver 18 for SQL Server",
+    "use_trusted_connection": false,
+    "user_env": "SILVER_USER",
+    "password_env": "SILVER_PASSWORD",
+    "trust_server_cert": true
+  },
+  "Gold": {
+    "alias": "Gold",
+    "type": "sqlserver",
+    "server": "host.docker.internal",
+    "database": "wh_gold",
+    "driver": "ODBC Driver 18 for SQL Server",
+    "use_trusted_connection": false,
+    "user_env": "GOLD_USER",
+    "password_env": "GOLD_PASSWORD",
+    "trust_server_cert": true
+  }
+}
