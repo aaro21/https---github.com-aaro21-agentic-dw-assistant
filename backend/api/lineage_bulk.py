@@ -6,15 +6,10 @@ from sqlalchemy import text
 from utils.hashing import hash_string
 from agents.lineage_agent import summarize_lineage
 from datetime import datetime
+from models.lineage import BulkLineageRequest
 
 router = APIRouter()
 conn_mgr = ConnectionManager()
-
-
-class BulkLineageRequest(BaseModel):
-    alias: str
-    schema: str = None  # optional: if None, analyze all procedures
-
 
 @router.post("/lineage/bulk/by-schema")
 def bulk_analyze_by_schema(payload: BulkLineageRequest):

@@ -147,3 +147,17 @@ CREATE TABLE dbo.source_to_stage_map (
 
     created_at        DATETIME2 DEFAULT SYSUTCDATETIME()
 );
+
+CREATE TABLE source_table (
+    id INT IDENTITY PRIMARY KEY,
+    connection_alias VARCHAR(100),
+    source_type VARCHAR(50),            -- 'oracle' or 'sqlserver'
+    schema_name VARCHAR(255),
+    table_name VARCHAR(255),
+    database_name VARCHAR(255),         -- Optional/nullable
+    host VARCHAR(255),                  -- Oracle only
+    port VARCHAR(10),                   -- Oracle only
+    service_name VARCHAR(255),          -- Oracle only
+    ezconnect VARCHAR(255),             -- host:port/service_name
+    last_seen DATETIME DEFAULT GETDATE()
+);
