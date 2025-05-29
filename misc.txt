@@ -1,35 +1,79 @@
-CREATE TABLE aud.proc_metadata (
-    id INT IDENTITY PRIMARY KEY,
-    proc_name NVARCHAR(300),
-    proc_hash NVARCHAR(100),
-    record_insert_datetime DATETIME DEFAULT GETDATE()
-);
+Dockerfile
 
-CREATE TABLE aud.table_map (
-    id INT IDENTITY PRIMARY KEY,
-    proc_id INT FOREIGN KEY REFERENCES aud.proc_metadata(id),
-    dest_db NVARCHAR(100),
-    dest_schema NVARCHAR(100),
-    dest_table NVARCHAR(100),
-    record_insert_datetime DATETIME DEFAULT GETDATE()
-);
+FROM python:3.12-slim
 
-CREATE TABLE aud.table_source (
-    id INT IDENTITY PRIMARY KEY,
-    table_map_id INT FOREIGN KEY REFERENCES aud.table_map(id),
-    src_db NVARCHAR(100),
-    src_schema NVARCHAR(100),
-    src_table NVARCHAR(100),
-    role VARCHAR(20), -- 'PRIMARY' or 'LOOKUP'
-    join_predicate NVARCHAR(MAX),
-    record_insert_datetime DATETIME DEFAULT GETDATE()
-);
+# Install ODBC Driver 18 and dependencies
+RUN apt-get update && \
+    apt-get install -y gnupg curl apt-transport-https && \
+    curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
+    curl https://packages.microsoft.com/config/debian/12/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
+    apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev gcc && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-CREATE TABLE aud.column_map (
-    id INT IDENTITY PRIMARY KEY,
-    table_source_id INT FOREIGN KEY REFERENCES aud.table_source(id),
-    dest_column NVARCHAR(100),
-    src_column NVARCHAR(100),
-    transform_expr NVARCHAR(MAX),
-    record_insert_datetime DATETIME DEFAULT GETDATE()
-);
+# Set up working directory
+WORKDIR /app
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY backend/app /app
+
+CMD ["python", "extract_lineage.py"]
+
+.env
+SQL_SERVER=your_server
+SQL_DB=your_db
+SQL_USER=your_user
+SQL_PASSWORD=your_password
+
+
+docker-compose
+version: "3.9"
+
+services:
+  extractor:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file:
+      - .env
+
+extract_lineage
+import os
+from dotenv import load_dotenv
+import pyodbc
+from sqlglot.lineage import LineageAnalyzer
+
+load_dotenv()
+
+conn_str = (
+    f"DRIVER={{ODBC Driver 18 for SQL Server}};"
+    f"SERVER={os.getenv('SQL_SERVER')};"
+    f"DATABASE={os.getenv('SQL_DB')};"
+    f"UID={os.getenv('SQL_USER')};"
+    f"PWD={os.getenv('SQL_PASSWORD')};"
+    f"TrustServerCertificate=yes;"
+)
+
+conn = pyodbc.connect(conn_str)
+cursor = conn.cursor()
+
+cursor.execute("""
+SELECT TOP 1 OBJECT_NAME(object_id) as proc_name, definition
+FROM sys.sql_modules
+WHERE definition LIKE '%INTO%'
+""")
+row = cursor.fetchone()
+proc_name, proc_text = row.proc_name, row.definition
+print(f"Processing: {proc_name}\n")
+
+lineage = LineageAnalyzer().analyze(proc_text)
+
+print("Destinations:")
+for db, tables in lineage.writes.items():
+    for t in tables:
+        print(f"  {db}.{t}")
+
+print("Sources:")
+for db, tables in lineage.reads.items():
+    for t in tables:
+        print(f"  {db}.{t}")
