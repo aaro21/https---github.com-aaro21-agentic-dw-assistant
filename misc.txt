@@ -1,0 +1,35 @@
+CREATE TABLE aud.proc_metadata (
+    id INT IDENTITY PRIMARY KEY,
+    proc_name NVARCHAR(300),
+    proc_hash NVARCHAR(100),
+    record_insert_datetime DATETIME DEFAULT GETDATE()
+);
+
+CREATE TABLE aud.table_map (
+    id INT IDENTITY PRIMARY KEY,
+    proc_id INT FOREIGN KEY REFERENCES aud.proc_metadata(id),
+    dest_db NVARCHAR(100),
+    dest_schema NVARCHAR(100),
+    dest_table NVARCHAR(100),
+    record_insert_datetime DATETIME DEFAULT GETDATE()
+);
+
+CREATE TABLE aud.table_source (
+    id INT IDENTITY PRIMARY KEY,
+    table_map_id INT FOREIGN KEY REFERENCES aud.table_map(id),
+    src_db NVARCHAR(100),
+    src_schema NVARCHAR(100),
+    src_table NVARCHAR(100),
+    role VARCHAR(20), -- 'PRIMARY' or 'LOOKUP'
+    join_predicate NVARCHAR(MAX),
+    record_insert_datetime DATETIME DEFAULT GETDATE()
+);
+
+CREATE TABLE aud.column_map (
+    id INT IDENTITY PRIMARY KEY,
+    table_source_id INT FOREIGN KEY REFERENCES aud.table_source(id),
+    dest_column NVARCHAR(100),
+    src_column NVARCHAR(100),
+    transform_expr NVARCHAR(MAX),
+    record_insert_datetime DATETIME DEFAULT GETDATE()
+);
